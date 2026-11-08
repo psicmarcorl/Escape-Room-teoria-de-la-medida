@@ -55,35 +55,35 @@ window.CONTENIDO = {
       icono: 'archivero',
       titulo: 'El archivero de las técnicas',
       tema: 'Pruebas proyectivas vs. psicométricas',
-      intro: 'Los expedientes de evaluación están revueltos: alguien mezcló las técnicas proyectivas con las pruebas psicométricas. Para la revisión del lunes, cada una debe volver a su cajón.',
+      intro: 'Las fichas de la doctora están revueltas: alguien mezcló las características de las técnicas proyectivas con las de las pruebas psicométricas. Para la revisión del lunes, cada ficha debe volver a su cajón.',
       notaUV: '«Antes de archivar, pregúntate: ¿la persona elige entre opciones cerradas o responde con libertad?»',
       sintesis: 'Proyectiva = estímulo ambiguo, respuesta libre, interpretación cualitativa. Psicométrica = estructurada, cuantificable, con baremo.',
       retos: [
         {
           id: '1.1',
           tipo: 'clasificar',
-          consigna: 'Toca una tarjeta y después el cajón donde va: ¿Proyectiva o Psicométrica?',
+          consigna: 'Toca cada característica y después el cajón donde va: ¿describe a una técnica proyectiva o a una prueba psicométrica?',
           cajones: [
             { id: 'proy', nombre: 'Proyectiva' },
             { id: 'psico', nombre: 'Psicométrica' }
           ],
           tarjetas: [
-            { texto: 'Rorschach (manchas de tinta)', cajon: 'proy', porque: 'Las manchas de tinta son un estímulo ambiguo y la persona responde con libertad.' },
-            { texto: 'TAT (láminas con escenas, se narra una historia)', cajon: 'proy', porque: 'La persona inventa una historia libre a partir de láminas poco estructuradas.' },
-            { texto: 'Test de la figura humana (dibujo)', cajon: 'proy', porque: 'El dibujo es una respuesta libre que se interpreta de forma cualitativa.' },
-            { texto: 'Frases incompletas de Rotter', cajon: 'proy', porque: 'La persona completa cada frase con lo que quiera: la respuesta es libre.' },
-            { texto: 'PHQ-9', cajon: 'psico', porque: 'Tiene ítems con opciones de respuesta cerradas que se suman en una puntuación.' },
-            { texto: 'GAD-7', cajon: 'psico', porque: 'Sus 7 ítems tienen opciones cerradas y dan una puntuación comparable.' },
-            { texto: 'Inventario de Depresión de Beck (BDI-II)', cajon: 'psico', porque: 'Se elige entre alternativas cerradas y se obtiene una puntuación total con puntos de corte.' },
-            { texto: 'Inventario SISCO SV-21 de estrés académico', cajon: 'psico', porque: 'Usa una escala de respuesta cerrada y produce una puntuación cuantificable.' }
+            { texto: 'Las instrucciones son abiertas, por ejemplo: «cuenta lo que ves» o «completa como quieras»', cajon: 'proy', porque: 'Una consigna abierta deja que la persona responda con total libertad.' },
+            { texto: 'Admite una cantidad casi ilimitada de respuestas posibles', cajon: 'proy', porque: 'Al no haber opciones dadas, cada persona puede responder de forma distinta.' },
+            { texto: 'Busca una visión global (holística) de la personalidad', cajon: 'proy', porque: 'Las técnicas proyectivas exploran a la persona en conjunto, más que rasgos aislados.' },
+            { texto: 'Dos evaluadores pueden llegar a interpretaciones distintas de las mismas respuestas', cajon: 'proy', porque: 'Como la interpretación es cualitativa, depende en buena medida de quien evalúa.' },
+            { texto: 'Todas las personas reciben los mismos ítems, instrucciones y condiciones de aplicación', cajon: 'psico', porque: 'Eso es estandarizar: aplicar igual a todos para poder comparar.' },
+            { texto: 'Se califica con una clave o plantilla, igual para todas las personas', cajon: 'psico', porque: 'Con una clave, cualquier evaluador obtiene la misma puntuación: es una calificación objetiva.' },
+            { texto: 'Reporta evidencias de confiabilidad y validez', cajon: 'psico', porque: 'Las pruebas psicométricas documentan qué tan consistentes y qué tan válidas son sus puntuaciones.' },
+            { texto: 'Puede aplicarse a muchas personas a la vez y calificarse rápido', cajon: 'psico', porque: 'Su formato estructurado permite aplicaciones colectivas y una calificación ágil.' }
           ],
-          pista: 'En cada tarjeta pregúntate: ¿la persona elige entre opciones ya dadas o responde con total libertad (dibuja, narra, completa)?',
-          exito: 'Las cuatro técnicas proyectivas usan estímulos ambiguos y respuesta libre; los cuatro instrumentos psicométricos tienen respuestas cerradas y se califican con números.'
+          pista: 'En cada tarjeta pregúntate: ¿describe algo abierto que se interpreta, o algo estandarizado que se califica igual para todos?',
+          exito: 'Consignas abiertas, respuestas ilimitadas, visión global e interpretación del evaluador son rasgos proyectivos; estandarización, clave de calificación, confiabilidad/validez y aplicación colectiva son rasgos psicométricos.'
         },
         {
           id: '1.2',
           tipo: 'clasificar',
-          consigna: 'Ahora clasifica las características. ¿Describen a una técnica proyectiva o a una prueba psicométrica?',
+          consigna: 'Ahora clasifica estas otras características. ¿Describen a una técnica proyectiva o a una prueba psicométrica?',
           cajones: [
             { id: 'proy', nombre: 'Proyectiva' },
             { id: 'psico', nombre: 'Psicométrica' }
@@ -96,7 +96,7 @@ window.CONTENIDO = {
             { texto: 'Produce una puntuación numérica estandarizada', cajon: 'psico', porque: 'Cuantificar y estandarizar es la base de la psicometría.' },
             { texto: 'La persona puede no ser plenamente consciente de qué se está evaluando', cajon: 'proy', porque: 'En las técnicas proyectivas el objetivo suele estar «enmascarado» tras un estímulo ambiguo.' }
           ],
-          pista: 'Imagina el Rorschach y el PHQ-9 lado a lado: ¿a cuál de los dos le queda cada característica?',
+          pista: 'Imagina una lámina con una mancha que hay que describir y un cuestionario de opción múltiple: ¿a cuál de los dos le queda cada característica?',
           exito: 'Ambigüedad, respuesta libre e interpretación cualitativa son rasgos proyectivos; respuestas cerradas, baremo y puntuación estandarizada son rasgos psicométricos.'
         },
         {
@@ -107,9 +107,9 @@ window.CONTENIDO = {
             {
               enunciado: 'La coordinación de bienestar universitario quiere tamizar ansiedad en 300 estudiantes en una semana. ¿Qué conviene más?',
               opciones: [
-                { texto: 'Un instrumento psicométrico breve como el GAD-7 (estructurado, rápido, cuantificable y comparable).', correcta: true, retro: 'Un instrumento breve y estructurado se aplica y califica rápido, y permite comparar los resultados de 300 personas.' },
-                { texto: 'El Rorschach aplicado individualmente.', retro: 'Es individual, lento y de interpretación cualitativa: imposible para 300 personas en una semana.' },
-                { texto: 'El dibujo de la figura humana con interpretación libre.', retro: 'La interpretación libre no da puntuaciones comparables, que es lo que necesita un tamizaje.' },
+                { texto: 'Una prueba psicométrica breve: estructurada, rápida, cuantificable y comparable.', correcta: true, retro: 'Una prueba breve y estructurada se aplica y califica rápido, y permite comparar los resultados de 300 personas.' },
+                { texto: 'Una técnica proyectiva con láminas ambiguas, aplicada de forma individual.', retro: 'Es individual, lenta y de interpretación cualitativa: imposible para 300 personas en una semana.' },
+                { texto: 'Pedir a cada estudiante un dibujo e interpretarlo libremente.', retro: 'La interpretación libre no da puntuaciones comparables, que es lo que necesita un tamizaje.' },
                 { texto: 'Una entrevista abierta de 2 horas con cada estudiante.', retro: 'Serían 600 horas de entrevista: no es viable para un tamizaje rápido.' }
               ]
             },
