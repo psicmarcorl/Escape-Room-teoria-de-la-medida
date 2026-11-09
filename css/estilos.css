@@ -354,6 +354,12 @@ select.selector:focus { border-color: var(--oro); }
 .dato-c span { font-size: 13px; color: #5C4A1E; }
 .dato-c strong { font-size: 17px; overflow-wrap: anywhere; }
 .dato-c.ancho { grid-column: span 2; }
+.calificacion-c { background: #FFE9A8; border: 2px solid var(--oro-viejo); }
+.calificacion-c strong { font-size: 22px; }
+.calificacion-c small { font-size: 13px; color: #5C4A1E; }
+.calificacion-mapa { margin-top: 6px; font-size: 16px; }
+.calificacion-mapa strong { color: var(--oro); font-size: 18px; }
+.calificacion-mapa span { color: var(--suave); font-size: 14px; }
 .tabla-salas { width: 100%; border-collapse: collapse; font-size: 14px; }
 .tabla-salas th, .tabla-salas td { text-align: left; padding: 5px 4px; border-bottom: 1px solid #DCCFAE; }
 .tabla-salas td.num, .tabla-salas th.num { text-align: right; }

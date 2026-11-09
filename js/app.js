@@ -249,6 +249,21 @@
     E.salas.forEach(function (s, i) { if (s.completa) t += puntosSala(i); });
     return t;
   }
+  // Calificación de la actividad: mínimo garantizado + parte proporcional al puntaje.
+  function evaluacion() {
+    var V = C.evaluacion || { valorActividad: 30, minimo: 10 };
+    var max = R.puntosPorSala * C.salas.length;
+    var pts = puntajeTotal();
+    var valor = V.minimo + (pts / max) * (V.valorActividad - V.minimo);
+    return { valor: Math.round(valor * 10) / 10, total: V.valorActividad, minimo: V.minimo, resto: V.valorActividad - V.minimo, pts: pts, max: max };
+  }
+  function pct(x) { return (Math.round(x * 10) / 10) + '%'; }
+  function textoCalificacion() { var v = evaluacion(); return pct(v.valor) + ' de ' + v.total + '%'; }
+  function textoFormula() {
+    var v = evaluacion();
+    return v.minimo + '% por participar + ' + v.resto + '% × (' + v.pts + ' ÷ ' + v.max + ' puntos)';
+  }
+
   function pistasRestantes() { return Math.max(0, R.pistasTotales - E.pistasUsadas); }
   function todasCompletas() { return E.salas.every(function (s) { return s.completa; }); }
   function siguienteSala() {
@@ -511,7 +526,8 @@
     var p = E.pareja || { p1: '', p2: '', grupo: '' };
     return el('div', { class: 'pantalla' },
       el('div', {}, el('h1', { text: 'Mapa del consultorio', style: 'font-size: 28px' }),
-        el('p', { style: 'color: var(--suave); margin-top: 4px', text: p.p1 + ' y ' + p.p2 + (p.grupo ? ' · ' + p.grupo : '') })),
+        el('p', { style: 'color: var(--suave); margin-top: 4px', text: p.p1 + ' y ' + p.p2 + (p.grupo ? ' · ' + p.grupo : '') }),
+        el('p', { class: 'calificacion-mapa' }, 'Calificación hasta ahora: ', el('strong', { text: textoCalificacion() }), el('span', { text: ' (puntaje ' + puntajeTotal() + ' de ' + R.puntosPorSala * C.salas.length + ')' }))),
       el('div', { style: 'display:flex; flex-direction:column; gap:8px' }, el('h2', { class: 'subtitulo-oro', text: 'Letras encontradas (revueltas)' }), letras),
       final,
       puertas,
@@ -1049,7 +1065,7 @@
         el('p', { text: F.texto }),
         el('p', { style: 'font-size: 19px; font-style: italic', text: F.nota }),
         el('p', { style: 'text-align:right; font-weight:700', text: F.firma })),
-      el('p', { style: 'color: var(--suave)' }, 'Tiempo: ', el('strong', { style: 'color: var(--texto)', text: tiempoLargo(tiempoTranscurrido()) }), ' · Puntaje: ', el('strong', { style: 'color: var(--texto)', text: puntajeTotal() + ' / ' + R.puntosPorSala * C.salas.length })),
+      el('p', { style: 'color: var(--suave)' }, 'Tiempo: ', el('strong', { style: 'color: var(--texto)', text: tiempoLargo(tiempoTranscurrido()) }), ' · Puntaje: ', el('strong', { style: 'color: var(--texto)', text: puntajeTotal() + ' / ' + R.puntosPorSala * C.salas.length }), ' · Calificación: ', el('strong', { style: 'color: var(--texto)', text: textoCalificacion() })),
       el('button', { type: 'button', class: 'btn btn-primario btn-grande', 'data-k': 'ver-constancia', onclick: function () { ir('constancia'); } }, 'Ver constancia de escape'));
   };
 
@@ -1090,7 +1106,8 @@
           el('div', { class: 'dato-c' }, el('span', { text: 'Fecha' }), el('strong', { text: fecha })),
           el('div', { class: 'dato-c' }, el('span', { text: 'Tiempo total' }), el('strong', { text: tiempoLargo(E.fin - E.inicio) })),
           el('div', { class: 'dato-c' }, el('span', { text: 'Puntaje' }), el('strong', { text: puntajeTotal() + ' / ' + R.puntosPorSala * C.salas.length })),
-          el('div', { class: 'dato-c ancho' }, el('span', { text: 'Pistas usadas' }), el('strong', { text: E.pistasUsadas + ' de ' + R.pistasTotales }))),
+          el('div', { class: 'dato-c ancho' }, el('span', { text: 'Pistas usadas' }), el('strong', { text: E.pistasUsadas + ' de ' + R.pistasTotales })),
+          el('div', { class: 'dato-c ancho calificacion-c' }, el('span', { text: 'Calificación de la actividad' }), el('strong', { text: textoCalificacion() }), el('small', { text: textoFormula() }))),
         tabla,
         el('div', { class: 'item-c' },
           el('p', { class: 'etiqueta-mono', text: 'Nuestro ítem Likert (reto 5.3)' }),

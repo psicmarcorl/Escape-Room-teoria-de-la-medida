@@ -47,6 +47,13 @@ window.CONTENIDO = {
     hash: '9704fe416d05e437b8bc94fc969d34a61c292bcab42762ce7c7e2cda3f624108'
   },
 
+  // EVALUACIÓN: equivalencia del puntaje del juego (0 a 100) en la calificación.
+  // Calificación = minimo + (puntaje ÷ 100) × (valorActividad − minimo)
+  evaluacion: {
+    valorActividad: 30, // % que vale la actividad en la calificación
+    minimo: 10          // % garantizado por participar
+  },
+
   reglas: {
     puntosPorSala: 20,
     penalizacionIntento: 1,   // por cada «Comprobar» incorrecto dentro de la sala

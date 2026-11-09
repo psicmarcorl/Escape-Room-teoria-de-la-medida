@@ -17,6 +17,13 @@ Al final se genera una **Constancia de escape** (nombres, grupo, fecha, tiempo, 
 - −1 por cada «Comprobar» incorrecto; −3 por cada pista (3 pistas por partida).
 - Mínimo 5 puntos por sala completada.
 
+## Calificación de la actividad
+La actividad vale **30%** de la calificación: **10% garantizado** por participar y los otros **20% proporcionales al puntaje del juego**.
+
+Calificación = 10% + (puntaje ÷ 100) × 20%. Ejemplos: 100 → 30%; 82 → 26.4%; 60 → 22%; 25 → 15%; 0 → 10%.
+
+La constancia muestra la calificación y su fórmula; el mapa muestra la «calificación hasta ahora» (útil como evidencia si una pareja no termina). Los porcentajes se cambian en el bloque `evaluacion` de `js/contenido.js`.
+
 ## Archivos
 | Archivo | Para qué sirve |
 |---|---|
