@@ -39,6 +39,14 @@ window.CONTENIDO = {
     ]
   },
 
+  // MODO DOCENTE: aquí NO está la clave, solo su versión cifrada (hash SHA-256).
+  // Para cambiarla: entra al modo docente → «Cambiar la clave docente» y
+  // reemplaza este bloque con el que te da la app.
+  docente: {
+    sal: 'aec81c16b4d8c2e04c978a0e49a789b6',
+    hash: '9704fe416d05e437b8bc94fc969d34a61c292bcab42762ce7c7e2cda3f624108'
+  },
+
   reglas: {
     puntosPorSala: 20,
     penalizacionIntento: 1,   // por cada «Comprobar» incorrecto dentro de la sala
@@ -413,6 +421,12 @@ window.CONTENIDO = {
             'Dificultad para concentrarse al estudiar',
             'Preocupación por las calificaciones',
             'Cansancio al despertar en días de examen'
+          ],
+          // Ítem de ejemplo para cada indicador (mismo orden); solo se usa en el modo docente.
+          ejemplos: [
+            'Me cuesta concentrarme cuando estudio.',
+            'Me preocupa obtener calificaciones bajas.',
+            'Despierto con cansancio en días de examen.'
           ],
           maxPalabras: 20,
           palabrasExtremas: ['siempre', 'nunca', 'todos', 'todas', 'nadie', 'ninguno', 'jamás'],

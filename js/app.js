@@ -140,14 +140,103 @@
     } catch (err) { return null; }
   }
   function guardar() {
+    if (modoDocente) return; // la vista docente nunca toca el avance guardado
     try { window.localStorage.setItem(CLAVE, JSON.stringify(E)); } catch (err) { /* sin guardado: la app sigue funcionando */ }
   }
   function borrarGuardado() {
     try { window.localStorage.removeItem(CLAVE); } catch (err) { /* nada */ }
   }
 
+  var modoDocente = false;
+  var vistaAcceso = false; // pantalla «Acceso docente» abierta con …/#docente
   var E = cargar() || estadoNuevo();
   var U = { clave: null }; // estado temporal del reto en pantalla (no se guarda)
+
+  /* ================================================================ Modo docente */
+
+  function sha256(texto) {
+    if (!window.crypto || !window.crypto.subtle || !window.TextEncoder) return Promise.reject(new Error('sin-crypto'));
+    return window.crypto.subtle.digest('SHA-256', new TextEncoder().encode(texto)).then(function (buf) {
+      return Array.prototype.map.call(new Uint8Array(buf), function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+    });
+  }
+  function verificarClave(clave) {
+    var D = C.docente || {};
+    if (!D.sal || !D.hash) return Promise.resolve(false);
+    return sha256(D.sal + ':' + clave).then(function (h) { return h === D.hash; });
+  }
+  function estadoDocente() {
+    var e = estadoNuevo();
+    var r = buscarReto('redactar');
+    e.pareja = { p1: 'Vista docente', p2: 'Prueba', grupo: 'Revisión' };
+    e.inicio = Date.now();
+    e.pantalla = 'mapa';
+    e.item = { indicador: r.indicadores[e.indicador], texto: (r.ejemplos && r.ejemplos[e.indicador]) || '—' };
+    return e;
+  }
+  function activarDocente() {
+    modoDocente = true;
+    vistaAcceso = false;
+    quitarHash();
+    E = estadoDocente();
+    U = { clave: null };
+    render({ nuevaPantalla: true });
+    anunciar('Modo docente activado. Nada de lo que hagas se guarda ni cuenta puntos.');
+  }
+  function quitarHash() {
+    if (location.hash === '#docente') {
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (err) { /* nada */ }
+    }
+  }
+  function salirDocente() {
+    modoDocente = false;
+    E = cargar() || estadoNuevo();
+    if (!E.pareja) E.pantalla = 'inicio';
+    U = { clave: null };
+    render({ nuevaPantalla: true });
+    anunciar('Saliste del modo docente.');
+  }
+  // Coloca la respuesta correcta del reto en pantalla.
+  function resolver(reto) {
+    if (reto.tipo === 'clasificar') {
+      reto.tarjetas.forEach(function (t, k) { U.lugar[k] = t.cajon; });
+      U.sel = null;
+    } else if (reto.tipo === 'ordenar') {
+      U.orden = rango(reto.elementos.length);
+    } else if (reto.tipo === 'emparejar') {
+      reto.elementos.forEach(function (it, k) { U.resp[k] = it.correcta; });
+    } else if (reto.tipo === 'opciones') {
+      reto.preguntas.forEach(function (p, k) { U.resp[k] = p.opciones.findIndex(function (o) { return o.correcta; }); });
+    } else if (reto.tipo === 'redactar') {
+      U.texto = (reto.ejemplos && reto.ejemplos[E.indicador]) || 'Me cuesta concentrarme cuando estudio.';
+      U.checks = reto.autoverificacion.map(function () { return true; });
+    }
+  }
+  function herramientaClave() {
+    var salida = el('pre', { class: 'codigo', hidden: true });
+    var aviso = el('p', { class: 'error-campo', hidden: true });
+    var form = el('form', { class: 'form-docente', onsubmit: function (ev) {
+      ev.preventDefault();
+      var nueva = $('#clave-nueva').value;
+      if (nueva.length < 8) { aviso.textContent = 'Usa al menos 8 caracteres.'; aviso.hidden = false; salida.hidden = true; return; }
+      aviso.hidden = true;
+      var bytes = new Uint8Array(16);
+      window.crypto.getRandomValues(bytes);
+      var sal = Array.prototype.map.call(bytes, function (b) { return ('0' + b.toString(16)).slice(-2); }).join('');
+      sha256(sal + ':' + nueva).then(function (h) {
+        salida.textContent = "  docente: {\n    sal: '" + sal + "',\n    hash: '" + h + "'\n  },";
+        salida.hidden = false;
+        anunciar('Código generado. Cópialo en js/contenido.js.');
+      });
+    } },
+      el('div', { class: 'campo' }, el('label', { for: 'clave-nueva', text: 'Clave nueva' }), el('input', { id: 'clave-nueva', type: 'password', autocomplete: 'new-password' })),
+      aviso,
+      el('button', { type: 'submit', class: 'btn btn-secundario' }, 'Generar código'));
+    return el('details', { class: 'cartel' },
+      el('summary', { text: 'Cambiar la clave docente' }),
+      el('p', { text: 'Escribe la clave nueva y pulsa «Generar código». Luego reemplaza el bloque «docente» de js/contenido.js con el código que aparece.' }),
+      form, salida);
+  }
 
   /* ================================================================ Puntaje */
 
@@ -176,9 +265,10 @@
     var activo = document.activeElement;
     var claveFoco = activo && activo.getAttribute ? activo.getAttribute('data-k') : null;
     renderBarra();
+    $('#banner-docente').hidden = !modoDocente;
     var main = $('#principal');
     main.textContent = '';
-    var fn = pantallas[E.pantalla] || pantallas.inicio;
+    var fn = vistaAcceso ? pantallas.acceso : (pantallas[E.pantalla] || pantallas.inicio);
     main.appendChild(fn());
     document.body.classList.toggle('uv', E.pantalla === 'sala' && !!E.uv);
     if (opc.nuevaPantalla) {
@@ -204,7 +294,7 @@
 
   function renderBarra() {
     var b = $('#barra');
-    var visible = E.pareja && ['mapa', 'sala', 'letra', 'puerta'].indexOf(E.pantalla) !== -1;
+    var visible = !vistaAcceso && E.pareja && ['mapa', 'sala', 'letra', 'puerta'].indexOf(E.pantalla) !== -1;
     b.hidden = !visible;
     b.textContent = '';
     if (!visible) return;
@@ -225,6 +315,7 @@
   }, 1000);
 
   function reiniciar() {
+    if (modoDocente) { E = estadoDocente(); U = { clave: null }; ir('mapa'); anunciar('Vista docente reiniciada.'); return; }
     if (!window.confirm('¿Reiniciar la partida? Se borrará todo el avance de este dispositivo.')) return;
     borrarGuardado();
     E = estadoNuevo();
@@ -312,7 +403,44 @@
           el('summary', { text: 'Leer la historia completa' }),
           H.completa.map(function (p) { return el('p', { text: p }); }))),
       form,
-      el('p', { class: 'nota-pie', text: C.duracion }));
+      el('p', { class: 'nota-pie', text: C.duracion }),
+      accesoDocente());
+  };
+
+  function accesoDocente() {
+    var esperando = false;
+    var error = el('p', { class: 'error-campo', id: 'err-clave', hidden: true, role: 'alert' });
+    var input = el('input', { id: 'clave-docente', type: 'password', autocomplete: 'current-password', 'aria-describedby': 'err-clave' });
+    var mostrarError = function (t) { error.textContent = '✕ ' + t; error.hidden = false; };
+    return el('details', { class: 'acceso-docente' },
+      el('summary', { text: 'Acceso docente' }),
+      el('form', { class: 'form-docente', onsubmit: function (ev) {
+        ev.preventDefault();
+        if (esperando) return;
+        esperando = true;
+        verificarClave(input.value).then(function (ok) {
+          if (ok) { input.value = ''; activarDocente(); return; }
+          mostrarError('Clave incorrecta.');
+          input.select();
+          setTimeout(function () { esperando = false; }, 1500);
+        }).catch(function () {
+          esperando = false;
+          mostrarError('Este navegador no puede verificar la clave. Abre la actividad desde su dirección https.');
+        });
+      } },
+        el('div', { class: 'campo' }, el('label', { for: 'clave-docente', text: 'Clave docente' }), input),
+        error,
+        el('button', { type: 'submit', class: 'btn btn-secundario' }, 'Entrar como docente')));
+  }
+
+  pantallas.acceso = function () {
+    var acceso = accesoDocente();
+    acceso.open = true;
+    return el('div', { class: 'pantalla' },
+      el('h1', { text: 'Acceso docente', style: 'font-size: 28px' }),
+      el('p', { style: 'color: var(--suave)', text: 'Revisa las salas sin resolverlas. El avance de la pareja que use este dispositivo no se modifica.' }),
+      acceso,
+      el('button', { type: 'button', class: 'btn btn-texto', style: 'align-self:center', onclick: function () { vistaAcceso = false; quitarHash(); render({ nuevaPantalla: true }); } }, 'Volver a la actividad'));
   };
 
   /* ================================================================ Pantalla: mapa */
@@ -346,7 +474,7 @@
     var puertas = el('div', { class: 'puertas' });
     C.salas.forEach(function (sala, i) {
       var st = E.salas[i];
-      var estado = st.completa ? 'hecha' : (i === sig ? 'siguiente' : 'cerrada');
+      var estado = st.completa ? 'hecha' : (i === sig || modoDocente ? 'siguiente' : 'cerrada');
       var lado;
       if (estado === 'hecha') lado = el('span', { class: 'estado' }, icono('bien', 26), puntosSala(i) + ' pts');
       else if (estado === 'siguiente') lado = el('span', { class: 'estado' }, el('span', { class: 'entrar', text: st.reto > 0 ? 'Seguir' : 'Entrar' }));
@@ -359,15 +487,22 @@
         onclick: function () {
           if (estado === 'cerrada') { anunciar('Esta sala se abre al completar la anterior.'); return; }
           E.salaActual = i;
+          if (modoDocente) { E.salas[i] = { reto: 0, fallos: 0, pistas: 0, completa: false, pistasVistas: {} }; U = { clave: null }; ir('sala'); return; }
           ir(estado === 'hecha' ? 'letra' : 'sala');
         }
       }, el('span', { class: 'icono' }, icono(sala.icono, 44)),
-        el('span', { class: 'info' }, el('span', { class: 'num', text: 'Sala ' + sala.id + (estado === 'siguiente' ? ' · siguiente' : '') }), el('span', { class: 'nombre', text: sala.titulo })),
+        el('span', { class: 'info' }, el('span', { class: 'num', text: 'Sala ' + sala.id + (estado === 'siguiente' && !modoDocente ? ' · siguiente' : '') }), el('span', { class: 'nombre', text: sala.titulo })),
         lado));
     });
 
     var final = null;
-    if (todasCompletas()) {
+    if (modoDocente) {
+      final = el('div', { class: 'fila-botones' },
+        el('button', { type: 'button', class: 'btn btn-secundario', 'data-k': 'ir-puerta', onclick: function () { ir('puerta'); } }, icono('puertaFinal', 22), 'Probar la puerta final'),
+        el('button', { type: 'button', class: 'btn btn-secundario', 'data-k': 'ver-constancia-ejemplo', onclick: function () {
+          E.fin = Date.now(); E.inicio = E.fin - 52 * 60000 - 14000; ir('constancia');
+        } }, 'Ver constancia de ejemplo'));
+    } else if (todasCompletas()) {
       final = E.fin
         ? el('button', { type: 'button', class: 'btn btn-primario btn-grande', onclick: function () { ir('constancia'); } }, 'Ver constancia de escape')
         : el('button', { type: 'button', class: 'btn btn-primario btn-grande', 'data-k': 'ir-puerta', onclick: function () { ir('puerta'); } }, icono('puertaFinal', 24), 'Ir a la puerta final');
@@ -381,7 +516,8 @@
       final,
       puertas,
       el('div', { class: 'librero' }, svgLibrero(), el('p', { text: 'Librero de la Dra. Escala' })),
-      el('button', { type: 'button', class: 'btn btn-texto', style: 'align-self:center', onclick: reiniciar }, 'Reiniciar partida'));
+      modoDocente ? herramientaClave() : null,
+      el('button', { type: 'button', class: 'btn btn-texto', style: 'align-self:center', onclick: reiniciar }, modoDocente ? 'Reiniciar vista docente' : 'Reiniciar partida'));
   };
 
   /* ================================================================ Pantalla: sala */
@@ -445,6 +581,14 @@
     var prog = el('div', { class: 'progreso', role: 'img', 'aria-label': 'Reto ' + (retoIdx + 1) + ' de ' + sala.retos.length });
     sala.retos.forEach(function (r, k) { prog.appendChild(el('span', { class: k < retoIdx || (k === retoIdx && U.resultado === 'bien') ? 'lleno' : '' })); });
     partes.push(prog);
+    if (modoDocente) {
+      partes.push(el('nav', { class: 'tabs-retos', 'aria-label': 'Ir a un reto (modo docente)' }, sala.retos.map(function (r, k) {
+        return el('button', {
+          type: 'button', class: 'btn btn-secundario', 'data-k': 'tab-' + k, 'aria-current': k === retoIdx ? 'true' : null,
+          onclick: function () { st.reto = k; st.completa = false; U = { clave: null }; render({ nuevaPantalla: true }); }
+        }, 'Reto ' + r.id);
+      })));
+    }
 
     partes.push(el('div', { class: 'tarjeta' },
       el('h2', { class: 'subtitulo-oro', text: 'Reto ' + reto.id + ' · ' + nombreTipo(reto.tipo) }),
@@ -452,13 +596,13 @@
 
     partes.push(CUERPOS[reto.tipo](reto, sala, i));
 
-    if (st.pistasVistas[reto.id]) {
+    if (st.pistasVistas[reto.id] || modoDocente) {
       partes.push(el('div', { class: 'pista-caja' }, icono('bombilla', 22), el('p', {}, el('strong', { text: 'Pista: ' }), reto.pista)));
     }
     if (U.mensaje) partes.push(U.mensaje);
 
     partes.push(botonesReto(reto, sala, i, retoIdx));
-    if (!st.completa) {
+    if (!st.completa && !modoDocente) {
       partes.push(el('p', { class: 'vale' }, 'Esta sala vale ahora ', el('strong', { text: puntosSala(i) + ' de ' + R.puntosPorSala }), ' puntos'));
     }
     return el('div', { class: 'pantalla' }, partes);
@@ -494,7 +638,9 @@
             el('button', { type: 'button', class: 'btn btn-secundario', 'data-k': 'pista-no', onclick: function () { U.confirmarPista = false; render({ foco: 'pista' }); } }, 'Cancelar')))));
     }
     var fila = el('div', { class: 'fila-botones' });
-    if (!st.pistasVistas[reto.id]) {
+    if (modoDocente) {
+      fila.appendChild(el('button', { type: 'button', class: 'btn btn-secundario', 'data-k': 'resolver', onclick: function () { resolver(reto); comprobar(reto, sala, i, retoIdx); } }, 'Mostrar respuesta'));
+    } else if (!st.pistasVistas[reto.id]) {
       var quedan = pistasRestantes();
       fila.appendChild(el('button', {
         type: 'button', class: 'btn btn-secundario', 'data-k': 'pista', disabled: quedan === 0 || U.confirmarPista,
@@ -519,7 +665,7 @@
     E.salas[i].fallos++;
     guardar();
     U.resultado = 'mal';
-    U.mensaje = retro('mal', titulo + ' (−' + R.penalizacionIntento + ' punto)', cuerpo);
+    U.mensaje = retro('mal', titulo + (modoDocente ? '' : ' (−' + R.penalizacionIntento + ' punto)'), cuerpo);
     render({ foco: 'comprobar' });
     anunciar(titulo + '. Revisen la retroalimentación.');
   }
@@ -828,7 +974,7 @@
   /* ================================================================ Pantalla: puerta final */
 
   pantallas.puerta = function () {
-    if (!todasCompletas()) { setTimeout(function () { ir('mapa'); }, 0); return el('div'); }
+    if (!todasCompletas() && !modoDocente) { setTimeout(function () { ir('mapa'); }, 0); return el('div'); }
     if (U.clave !== 'puerta') U = { clave: 'puerta', picks: [], mensaje: null, abierta: false };
     var P = C.puertaFinal;
     var letras = E.orden.map(function (s) { return C.salas[s].letra; });
@@ -956,12 +1102,17 @@
       el('div', { class: 'no-imprimir', style: 'display:flex; flex-direction:column; gap:12px' },
         el('button', { type: 'button', class: 'btn btn-primario btn-grande', 'data-k': 'imprimir', onclick: function () { window.print(); } }, icono('imprimir', 22), 'Imprimir / guardar PDF'),
         el('p', { class: 'instruccion', text: C.constancia.instruccion }),
-        el('button', { type: 'button', class: 'btn btn-texto', style: 'align-self:center', onclick: reiniciar }, 'Reiniciar para otra pareja')));
+        el('button', { type: 'button', class: 'btn btn-texto', style: 'align-self:center', onclick: reiniciar }, modoDocente ? 'Volver al mapa (vista docente)' : 'Reiniciar para otra pareja')));
   };
 
   /* ================================================================ Arranque */
 
   $('#encabezado-texto').textContent = C.encabezado;
+  $('#salir-docente').addEventListener('click', salirDocente);
   if (!E.pareja) E.pantalla = 'inicio';
+  vistaAcceso = location.hash === '#docente';
+  window.addEventListener('hashchange', function () {
+    if (location.hash === '#docente' && !modoDocente) { vistaAcceso = true; render({ nuevaPantalla: true }); }
+  });
   render({ nuevaPantalla: true });
 })();
